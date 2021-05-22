@@ -1,34 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import ImageCard from './Components/ImageCard';
-import ImageSearch from './Components/ImageSearch';
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Coin from "./Coin";
+import "./App.css";
 
 function App() {
-  const [images, setImages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [term, setTerm] = useState('');
+  const [coins, setCoins] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch(`https://pixabay.com/api/?key=21734718-4c3a75443c2d8a02db8389a63&q=${term}&image_type=photo&pretty=true`)
-      .then(res => res.json())
-      .then(data => {
-        setImages(data.hits);
-        setIsLoading(false);
+    axios
+      .get(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false"
+      )
+      .then((res) => {
+        setCoins(res.data);
+        console.log(res.data);
       })
-      .catch(err => console.log(err));
-  }, [term]);
+      .catch((error) => console.log(error));
+  }, []);
+
+  const handleChange = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const filteredCoins = coins.filter((coin) =>
+    coin.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="container mx-auto">
-      <ImageSearch searchText={(text) => setTerm(text)} />
-
-      {!isLoading && images.length === 0 && <h1 className="text-5xl text-center mx-auto mt-32">No Images Found</h1> }
-
-      {isLoading ? <h1 className="text-6xl text-center mx-auto mt-32">Loading...</h1> : <div className="grid grid-cols-3 gap-4">
-        {images.map(image => (
-          <ImageCard key={image.id} image={image} />
-        ))}
-      </div>}
+    <div className="coin-app">
+      <div className="coin-search">
+        <h1 className="coin-text">Search a currency</h1>
+        <form>
+          <input
+            className="coin-input"
+            type="text"
+            onChange={handleChange}
+            placeholder="Search"
+          />
+        </form>
+      </div>
+      {filteredCoins.map((coin) => {
+        return (
+          <Coin
+            key={coin.id}
+            name={coin.name}
+            price={coin.current_price}
+            symbol={coin.symbol}
+            marketcap={coin.total_volume}
+            volume={coin.market_cap}
+            image={coin.image}
+            priceChange={coin.price_change_percentage_24h}
+          />
+        );
+      })}
     </div>
   );
 }
