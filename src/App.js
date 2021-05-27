@@ -1,35 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import ImageCard from './Components/ImageCard';
-import ImageSearch from './Components/ImageSearch';
+import React from "react";
+import "./App.css";
+import AddTransaction from "./Components/AddTransaction";
+import { Balance } from "./Components/Balance";
+import { Header } from "./Components/Header";
+import IncomeExpenses from "./Components/IncomeExpenses";
+import TransactionList from "./Components/TransactionList";
 
-
+import { GlobalProvider } from "./context/GloabalState";
 function App() {
-  const [images, setImages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [term, setTerm] = useState('');
-
-  useEffect(() => {
-    fetch(`https://pixabay.com/api/?key=21734718-4c3a75443c2d8a02db8389a63&q=${term}&image_type=photo&pretty=true`)
-      .then(res => res.json())
-      .then(data => {
-        setImages(data.hits);
-        setIsLoading(false);
-      })
-      .catch(err => console.log(err));
-  }, [term]);
-
   return (
-    <div className="container mx-auto">
-      <ImageSearch searchText={(text) => setTerm(text)} />
-
-      {!isLoading && images.length === 0 && <h1 className="text-5xl text-center mx-auto mt-32">No Images Found</h1> }
-
-      {isLoading ? <h1 className="text-6xl text-center mx-auto mt-32">Loading...</h1> : <div className="grid grid-cols-3 gap-4">
-        {images.map(image => (
-          <ImageCard key={image.id} image={image} />
-        ))}
-      </div>}
-    </div>
+    <GlobalProvider>
+      <Header />
+      <div className="container">
+        <Balance />
+        <IncomeExpenses />
+        <TransactionList />
+        <AddTransaction />
+      </div>
+    </GlobalProvider>
   );
 }
 
