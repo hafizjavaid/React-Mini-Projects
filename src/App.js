@@ -1,125 +1,128 @@
-import React, { useState } from 'react';
-import { ReactComponent as BellIcon } from "./icons/bell.svg";
-import { ReactComponent as MessengerIcon } from "./icons/messenger.svg";
-import { ReactComponent as CaretIcon } from "./icons/caret.svg";
-import { ReactComponent as PlusIcon } from "./icons/plus.svg";
-import { ReactComponent as CogIcon } from "./icons/cog.svg";
-import { ReactComponent as ChevronIcon } from "./icons/chevron.svg";
-import { ReactComponent as ArrowIcon } from "./icons/arrow.svg";
-import { ReactComponent as BoltIcon } from "./icons/bolt.svg";
-import { CSSTransition } from 'react-transition-group';
-import "./App.css";
+import React, { useRef, useState } from 'react';
+import './App.css';
+
+import firebase from 'firebase/app';
+import 'firebase/firestore';
+import 'firebase/auth';
+import 'firebase/analytics';
+
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+
+firebase.initializeApp({
+  // your config
+  apiKey: "AIzaSyDxUW_dpbw83waVfRqq14mFcjNBzklzr2M",
+  authDomain: "axios2-b928a.firebaseapp.com",
+  databaseURL: "https://axios2-b928a.firebaseio.com",
+  projectId: "axios2-b928a",
+  storageBucket: "axios2-b928a.appspot.com",
+  messagingSenderId: "209320601781",
+  appId: "1:209320601781:web:6ed710666516ef5573f6fc",
+  measurementId: "G-C6CPPJTJN5"
+})
+
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+// const analytics = firebase.analytics();
+
 function App() {
+
+  // This hook is used to check weather the use is log in or not
+  // It will return user object otherwise null.
+  const [user] = useAuthState(auth);
   return (
-    <Navbar>
-      <NavItem icon={<PlusIcon />} />
-      <NavItem icon={<BellIcon />} />
-      <NavItem icon={<MessengerIcon />} />
-      <NavItem icon={<CaretIcon />} >
-      <DropdownMenu></DropdownMenu>
-      </NavItem>
-    </Navbar>
-  );
-}
+    <div className="App">
+      <header>
+        <h1>⚛️🔥💬</h1>
+        <SignOut />
+      </header>
 
-function Navbar(props) {
-  return (
-    <nav className="navbar">
-      <ul className="navbar-nav">{props.children}</ul>
-    </nav>
-  );
-}
+      <section>
+        {user ? <ChatRoom /> : <SignIn />}
+      </section>
 
-function NavItem(props) {
-  const [open, setOpen] = useState(false)
-  return (
-    <li className="nav-item">
-      <a href={() => false} className="icon-button" onClick={() => setOpen(!open)}>{props.icon}</a>
-      {open && props.children}
-    </li>
-  );
-}
-
-function DropdownMenu() {
-  const [activeMenu, setActiveMenu] = useState('main');
-  const [menuHeight, setMenuHeight] = useState(null);
- 
-
-  function calcHeight(el) {
-    const height = el.offsetHeight;
-    setMenuHeight(height);
-  }
-  function DropdownItem(props) {
-    return (
-      // eslint-disable-next-line
-      <a href="#" className="menu-item" onClick={() => props.goToMenu && setActiveMenu(props.goToMenu)}>
-        <span className="icon-button">{props.leftIcon}</span>
-        {props.children}
-        <span className="icon-right">{props.rightIcon}</span>
-      </a>
-    );
-  }
-
-
-  return(
-    <div className="dropdown" style={{ height: menuHeight }}>
-      <CSSTransition
-        in={activeMenu === 'main'}
-        timeout={500}
-        classNames="menu-primary"
-        unmountOnExit
-        onEnter={calcHeight}>
-       <div className="menu">
-          <DropdownItem leftIcon="😅">My Profile</DropdownItem>
-          <DropdownItem
-            leftIcon={<CogIcon />}
-            rightIcon={<ChevronIcon />}
-            goToMenu="settings">
-            Settings
-          </DropdownItem>
-          <DropdownItem
-            leftIcon="🦧"
-            rightIcon={<ChevronIcon />}
-            goToMenu="animals">
-            Animals
-          </DropdownItem>
-
-        </div>
-        </CSSTransition>
-        <CSSTransition
-        in={activeMenu === 'settings'}
-        timeout={500}
-        classNames="menu-secondary"
-        unmountOnExit
-        onEnter={calcHeight}>
-        <div className="menu">
-          <DropdownItem goToMenu="main" leftIcon={<ArrowIcon />}>
-            <h2>My Tutorial</h2>
-          </DropdownItem>
-          <DropdownItem leftIcon={<BoltIcon />}>HTML</DropdownItem>
-          <DropdownItem leftIcon={<BoltIcon />}>CSS</DropdownItem>
-          <DropdownItem leftIcon={<BoltIcon />}>JavaScript</DropdownItem>
-          <DropdownItem leftIcon={<BoltIcon />}>Awesome!</DropdownItem>
-        </div>
-      </CSSTransition>
-      <CSSTransition
-        in={activeMenu === 'animals'}
-        timeout={500}
-        classNames="menu-secondary"
-        unmountOnExit
-        onEnter={calcHeight}>
-        <div className="menu">
-          <DropdownItem goToMenu="main" leftIcon={<ArrowIcon />}>
-            <h2>Animals</h2>
-          </DropdownItem>
-          <DropdownItem leftIcon="🦘">Kangaroo</DropdownItem>
-          <DropdownItem leftIcon="🐸">Frog</DropdownItem>
-          <DropdownItem leftIcon="🦋">Horse?</DropdownItem>
-          <DropdownItem leftIcon="🦔">Hedgehog</DropdownItem>
-        </div>
-      </CSSTransition>
     </div>
   )
 }
 
-export default App;
+function SignIn() {
+
+  const signInWithGoogle = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+  }
+
+  return (
+    <>
+      <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
+      <p>Do not violate the community guidelines or you will be banned for life!</p>
+    </>
+  )
+
+}
+function SignOut() {
+  return auth.currentUser && (
+    <button className="sign-out" onClick={() => auth.signOut()}>Sign Out</button>
+  )
+}
+
+
+function ChatRoom() {
+  const dummy = useRef();
+  const messagesRef = firestore.collection('messages');
+  const query = messagesRef.orderBy('createdAt').limit(25);
+
+  const [messages] = useCollectionData(query, { idField: 'id' });
+
+  const [formValue, setFormValue] = useState('');
+
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+
+    const { uid, photoURL } = auth.currentUser;
+
+    await messagesRef.add({
+      text: formValue,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      uid,
+      photoURL
+    })
+
+    setFormValue('');
+    dummy.current.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  return (<>
+    <main>
+
+      {messages && messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
+
+      <span ref={dummy}></span>
+
+    </main>
+
+    <form onSubmit={sendMessage}>
+
+      <input value={formValue} onChange={(e) => setFormValue(e.target.value)} placeholder="say something nice" />
+
+      <button type="submit" disabled={!formValue}>🕊️</button>
+
+    </form>
+  </>)
+}
+
+
+function ChatMessage(props) {
+  const { text, uid, photoURL } = props.message;
+
+  const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received';
+
+  return (<>
+    <div className={`message ${messageClass}`}>
+      <img alt="" src={photoURL || 'https://api.adorable.io/avatars/23/abott@adorable.png'} />
+      <p>{text}</p>
+    </div>
+  </>)
+}
+export default App
